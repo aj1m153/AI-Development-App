@@ -68,9 +68,9 @@ def _secret(section: str, key: str, default: str = "") -> str:
         return default
 
 
-CONTACT_EMAIL = _secret("contact", "email", "appiahjim024@gmail.com")
+CONTACT_EMAIL = _secret("contact", "email", "jim@jimappiah.com")
 CALENDLY_URL = _secret("contact", "calendly_url",
-                       "https://calendly.com/appiahjim024/30min")
+                       "https://calendly.com/jim-appiah/discovery-call")
 WEBHOOK_URL = _secret("webhook", "lead_capture_url", "")
 
 
@@ -177,12 +177,81 @@ label, .stRadio label, .stCheckbox label, .stSelectbox label {{
     color: {CHARCOAL} !important;
 }}
 
-/* Selectbox dropdown menu (popover) */
-[data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+/* === SELECTBOX DROPDOWN POPOVER === */
+/* The dropdown is portaled to document root so we target globally and nest aggressively. */
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] *,
+div[data-baseweb="menu"],
+div[data-baseweb="menu"] *,
+ul[role="listbox"],
+ul[role="listbox"] *,
+li[role="option"],
+li[role="option"] * {{
     background-color: #FFFFFF !important;
-}}
-[role="option"], [role="option"] * {{
     color: {CHARCOAL} !important;
+}}
+/* Hovered / focused option uses cream highlight */
+li[role="option"]:hover,
+li[role="option"]:hover *,
+li[role="option"][aria-selected="true"],
+li[role="option"][aria-selected="true"] * {{
+    background-color: {CREAM} !important;
+    color: {NAVY} !important;
+}}
+/* The popover wrapper itself sometimes has its own dark bg layer */
+div[data-baseweb="popover"] > div {{
+    background-color: #FFFFFF !important;
+    border: 1px solid {LIGHT_GREY} !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+}}
+
+/* === BUTTONS — primary + form submit === */
+/* Streamlit primary buttons inherit dark theme — force navy bg, white text. */
+.stButton > button[kind="primary"],
+.stButton > button:not([kind="secondary"]),
+.stFormSubmitButton > button,
+button[data-testid="baseButton-primary"],
+button[data-testid="baseButton-secondaryFormSubmit"],
+button[data-testid="stBaseButton-primary"],
+button[data-testid="stBaseButton-secondaryFormSubmit"] {{
+    background-color: {NAVY} !important;
+    color: #FFFFFF !important;
+    border: 1px solid {NAVY} !important;
+    font-weight: 600 !important;
+}}
+.stButton > button[kind="primary"]:hover,
+.stButton > button:not([kind="secondary"]):hover,
+.stFormSubmitButton > button:hover,
+button[data-testid="baseButton-primary"]:hover,
+button[data-testid="baseButton-secondaryFormSubmit"]:hover,
+button[data-testid="stBaseButton-primary"]:hover,
+button[data-testid="stBaseButton-secondaryFormSubmit"]:hover {{
+    background-color: {NAVY_LIGHT} !important;
+    border-color: {NAVY_LIGHT} !important;
+    color: #FFFFFF !important;
+}}
+/* Force button text color even when inherited from p/span children */
+.stButton > button p,
+.stFormSubmitButton > button p,
+button[data-testid^="baseButton"] p,
+button[data-testid^="stBaseButton"] p {{
+    color: inherit !important;
+}}
+
+/* Secondary buttons (Back, Restart) stay light-on-dark-text */
+.stButton > button[kind="secondary"],
+button[data-testid="baseButton-secondary"],
+button[data-testid="stBaseButton-secondary"] {{
+    background-color: #FFFFFF !important;
+    color: {NAVY} !important;
+    border: 1px solid {LIGHT_GREY} !important;
+}}
+.stButton > button[kind="secondary"]:hover,
+button[data-testid="baseButton-secondary"]:hover,
+button[data-testid="stBaseButton-secondary"]:hover {{
+    background-color: {CREAM} !important;
+    border-color: {NAVY} !important;
+    color: {NAVY} !important;
 }}
 
 html, body, [class*="css"] {{
@@ -243,21 +312,7 @@ h3 {{ font-size: 1.1rem !important; }}
     font-size: 0.98rem; color: {CHARCOAL}; margin-top: 4px; font-weight: 500;
 }}
 
-.stButton > button {{
-    background: {NAVY}; color: white !important; border: none;
-    padding: 0.6rem 1.4rem; font-weight: 600; border-radius: 4px;
-    transition: all 0.15s ease;
-}}
-.stButton > button:hover {{
-    background: {NAVY_LIGHT}; transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(27, 54, 93, 0.18);
-}}
-.stButton > button[kind="secondary"] {{
-    background: white; color: {NAVY} !important; border: 1px solid {LIGHT_GREY};
-}}
-.stButton > button[kind="secondary"]:hover {{
-    background: {CREAM}; border-color: {NAVY};
-}}
+/* Button styles are defined in the FORCE LIGHT THEME section above. */
 
 .progress-track {{
     display: flex; align-items: center; justify-content: center;
