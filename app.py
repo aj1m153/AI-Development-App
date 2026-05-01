@@ -27,11 +27,13 @@ from pdf_generator import build_pdf
 
 # Cache PDF generation so a Streamlit rerun (e.g., when the user clicks a
 # download button) doesn't trigger a fresh PDF rebuild every time. Keyed by a
-# stable hash of the assessment payload + contact info.
+# stable JSON-serialized hash of the assessment payload + contact info.
+# The `_assessment` underscore prefix tells Streamlit to skip hashing this
+# argument (the dict contains unhashable nested objects).
 @st.cache_data(show_spinner=False, max_entries=64)
-def _cached_pdf(_assessment_key: str, contact_email: str, calendly_url: str,
-                assessment: dict) -> bytes:
-    return build_pdf(assessment, contact_email, calendly_url)
+def _cached_pdf(assessment_key: str, contact_email: str, calendly_url: str,
+                _assessment: dict) -> bytes:
+    return build_pdf(_assessment, contact_email, calendly_url)
 
 
 def _cached_pdf_call(assessment: dict, contact_email: str,
@@ -702,10 +704,13 @@ def nav_buttons(back_step: str | None, next_step: str | None,
 
 
 def _money(n: float) -> str:
-    if n >= 1_000_000_000: return f"${n/1_000_000_000:.1f}B"
-    if n >= 1_000_000:     return f"${n/1_000_000:.1f}M"
-    if n >= 1_000:         return f"${n/1_000:.0f}K"
-    return f"${n:.0f}"
+    """Format a number as compact USD. Handles negatives correctly."""
+    sign = "-" if n < 0 else ""
+    abs_n = abs(n)
+    if abs_n >= 1_000_000_000: return f"{sign}${abs_n/1_000_000_000:.1f}B"
+    if abs_n >= 1_000_000:     return f"{sign}${abs_n/1_000_000:.1f}M"
+    if abs_n >= 1_000:         return f"{sign}${abs_n/1_000:.0f}K"
+    return f"{sign}${abs_n:.0f}"
 
 
 # =============================================================================
@@ -895,14 +900,18 @@ def step_stage3():
         "strategically important each one is to your business right now.",
     )
     answers = {k: v for k, v in st.session_state.stage3.copy().items() if k in use_cases}
-    for uc in use_cases:
+    for idx, uc in enumerate(use_cases):
         st.markdown(
             f"<div style='font-weight: 600; color: {CHARCOAL}; margin-top: 0.5rem;'>{uc}</div>",
             unsafe_allow_html=True,
         )
+        # Index-based key — use-case labels can contain spaces, ampersands,
+        # and slashes which create unstable widget keys across reruns.
+        # Also include the archetype so keys reset cleanly if archetype changes.
+        slider_key = f"s3_{st.session_state.archetype}_{idx:02d}"
         answers[uc] = st.slider(
             "Strategic fit", 1, 5, value=answers.get(uc, 3),
-            key=f"s3_{uc}", label_visibility="collapsed",
+            key=slider_key, label_visibility="collapsed",
             help="1 = not relevant · 3 = nice to have · 5 = critical",
         )
     st.session_state.stage3 = answers
