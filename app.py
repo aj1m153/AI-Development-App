@@ -68,9 +68,9 @@ def _secret(section: str, key: str, default: str = "") -> str:
         return default
 
 
-CONTACT_EMAIL = _secret("contact", "email", "jim@jimappiah.com")
+CONTACT_EMAIL = _secret("contact", "email", "appiahjim024@gmail.com")
 CALENDLY_URL = _secret("contact", "calendly_url",
-                       "https://calendly.com/jim-appiah/discovery-call")
+                       "https://calendly.com/appiahjim024/30min")
 WEBHOOK_URL = _secret("webhook", "lead_capture_url", "")
 
 
