@@ -671,16 +671,13 @@ def render_progress(current: str):
 
 
 def render_stage_banner(label: str, title: str, help_text: str):
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="stage-banner">
             <div class="stage-label">{label}</div>
             <div class="stage-title">{title}</div>
             <div class="stage-help">{help_text}</div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
 
 def goto(step: str):
@@ -713,6 +710,28 @@ def _money(n: float) -> str:
     return f"{sign}${abs_n:.0f}"
 
 
+def _html(markup: str) -> str:
+    """
+    Pass raw HTML to st.markdown safely.
+
+    Streamlit's markdown parser treats lines that begin with 4+ spaces as
+    code blocks — even when `unsafe_allow_html=True`. Multi-line f-strings
+    in this file are typically indented to match their Python context, so
+    every <div> ends up inside <pre><code>. This helper collapses all
+    leading whitespace per line so the parser sees raw HTML.
+    """
+    # Drop empty leading/trailing lines, then strip leading whitespace
+    # from every line. Keeps the HTML readable in source while emitting
+    # markup that markdown won't fence as code.
+    lines = [line.strip() for line in markup.strip().splitlines()]
+    return "".join(lines)
+
+
+def _md(markup: str):
+    """Shortcut: dedent + render via st.markdown with HTML enabled."""
+    st.markdown(_html(markup), unsafe_allow_html=True)
+
+
 # =============================================================================
 # STEP: WELCOME
 # =============================================================================
@@ -736,15 +755,12 @@ def step_welcome():
     ]
     for col, (title, text) in zip(cols, blurbs):
         with col:
-            st.markdown(
-                f"""
+            _md(f"""
                 <div style='border-top: 2px solid {GOLD}; padding-top: 10px;'>
                     <div style='font-weight: 700; color: {NAVY}; font-size: 0.95rem;'>{title}</div>
                     <div style='color: {GREY}; font-size: 0.85rem; margin-top: 4px; line-height: 1.5;'>{text}</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                """)
 
     st.markdown("###")
     st.markdown("##### Tell us about you")
@@ -832,14 +848,12 @@ def step_stage1():
     )
     answers = st.session_state.stage1.copy()
     for q in STAGE1_QUESTIONS:
-        st.markdown(
-            f"""
+        _md(f"""
             <div class="q-card">
                 <div class="q-label">{q['label']}</div>
                 <div class="q-statement">{q['statement']}</div>
             </div>
-            """, unsafe_allow_html=True,
-        )
+            """)
         answers[q["key"]] = st.slider(
             "Rate 1 (strongly disagree) to 5 (strongly agree)",
             1, 5, value=answers.get(q["key"], 3),
@@ -863,15 +877,12 @@ def step_stage2():
     levels = list(VALUE_LEVELS.keys())
     for i, p in enumerate(VALUE_POOLS):
         # Each pool gets its own card with the label on top and radios below
-        st.markdown(
-            f"""
+        _md(f"""
             <div class="q-card" style="margin-bottom: 0.4rem;">
                 <div class="q-label">Value Pool {i+1:02d}</div>
                 <div class="q-statement">{p['label']}</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            """)
         current_score = answers.get(p["key"], 0)
         current_label = next(
             (l for l, v in VALUE_LEVELS.items() if v == current_score),
@@ -929,14 +940,12 @@ def step_stage4():
     )
     answers = st.session_state.stage4.copy()
     for layer in CAPABILITY_LAYERS:
-        st.markdown(
-            f"""
+        _md(f"""
             <div class="q-card">
                 <div class="q-label">{layer['label']}</div>
                 <div class="q-statement">{layer['statement']}</div>
             </div>
-            """, unsafe_allow_html=True,
-        )
+            """)
         answers[layer["key"]] = st.slider(
             layer["label"], 1, 5, value=answers.get(layer["key"], 3),
             key=f"s4_{layer['key']}", label_visibility="collapsed",
@@ -1019,8 +1028,7 @@ def step_results():
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
     # ---- TOP BAR ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-topbar">
             <div class="term-brand">
                 <div class="dot-pulse"></div>
@@ -1040,13 +1048,10 @@ def step_results():
                 ANALYSIS COMPLETE
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- VERDICT BANNER WITH LIVE-TICKING SCORE ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-verdict" style="--accent: {accent};">
             <div>
                 <div class="v-label">DIAGNOSTIC VERDICT</div>
@@ -1059,9 +1064,7 @@ def step_results():
                 <div class="v-score-label">COMPOSITE / 100</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     st.markdown(
         f"<div style='color: {TERM_MUTE}; line-height: 1.6; "
@@ -1073,8 +1076,7 @@ def step_results():
     st.markdown(_render_kpi_row(stage_scores), unsafe_allow_html=True)
 
     # ---- ARCHETYPE PANEL ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-panel">
             <div class="term-panel-header">
                 <div class="term-panel-title">Industry Archetype</div>
@@ -1093,37 +1095,29 @@ def step_results():
                 </div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- RADAR CHART — DARK ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-panel">
             <div class="term-panel-header">
                 <div class="term-panel-title">Stage-by-Stage Readiness</div>
                 <div class="term-panel-meta">5-AXIS · NORMALIZED 0–100</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
     st.plotly_chart(_radar_dark(stage_scores), use_container_width=True,
                     config={"displayModeBar": False})
 
     # ---- CAPABILITY STACK + LIMIT BARS ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-panel">
             <div class="term-panel-header">
                 <div class="term-panel-title">Capability Stack · Bottleneck Diagnostic</div>
                 <div class="term-panel-meta">YOU CANNOT EXCEED YOUR WEAKEST LAYER</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
     st.plotly_chart(_capability_dark(assessment["layer_scores"]),
                     use_container_width=True, config={"displayModeBar": False})
 
@@ -1136,8 +1130,7 @@ def step_results():
                 unsafe_allow_html=True)
 
     # ---- USE CASES ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-panel">
             <div class="term-panel-header">
                 <div class="term-panel-title">Recommended Use Cases · Top 3</div>
@@ -1145,16 +1138,13 @@ def step_results():
             </div>
             {_render_use_cases(assessment["ranked_use_cases"][:3])}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- ROI SNAPSHOT ----
     st.markdown(_render_roi_grid(roi), unsafe_allow_html=True)
 
     # ---- FIRST MOVE ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-panel">
             <div class="term-panel-header">
                 <div class="term-panel-title">Your First Move</div>
@@ -1164,9 +1154,7 @@ def step_results():
                 <div class="first-move">{archetype['first_move']}</div>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- NEXT STEPS ----
     st.markdown(_render_next_steps(verdict["next_steps"]), unsafe_allow_html=True)
@@ -1195,8 +1183,7 @@ def step_results():
             f"Thanks,\n{assessment['lead'].get('name', '')}"
         )
         mailto = f"mailto:{CONTACT_EMAIL}?subject={subject}&body={body}"
-        st.markdown(
-            f"""
+        _md(f"""
             <a href="{mailto}" style="
                 display: block; text-align: center; padding: 0.6rem 1rem;
                 background: {TERM_PANEL}; color: {TERM_TEXT};
@@ -1208,13 +1195,10 @@ def step_results():
               onmouseout="this.style.borderColor='{TERM_BORDER}';this.style.color='{TERM_TEXT}';">
                 ✉ EMAIL DIRECTLY
             </a>
-            """,
-            unsafe_allow_html=True,
-        )
+            """)
 
     # ---- CTA ----
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-cta">
             <div class="cta-title">Continue the Conversation</div>
             <div class="cta-sub">
@@ -1225,9 +1209,7 @@ def step_results():
                 BOOK DISCOVERY CALL →
             </a>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- WEBHOOK (silent) ----
     if WEBHOOK_URL and not st.session_state.get("webhook_sent"):
@@ -1247,8 +1229,7 @@ def step_results():
 
     # ---- FOOTER ----
     breach_count = sum(1 for s in assessment["layer_scores"].values() if s <= 2)
-    st.markdown(
-        f"""
+    _md(f"""
         <div class="term-footer">
             <div class="item">
                 <span class="fdot" style="background: {TERM_GREEN};"></span>
@@ -1268,9 +1249,7 @@ def step_results():
                 <span>{assessment['lead'].get('email', '—')}</span>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """)
 
     # ---- RESTART (small button at very bottom) ----
     st.markdown("###")
@@ -1305,35 +1284,33 @@ def _render_kpi_row(stage_scores: dict) -> str:
         delta_label = "STRONG" if score >= 75 else ("SOLID" if score >= 55 else ("DEVELOPING" if score >= 35 else "FOUNDATIONAL"))
         sub_class = "kpi-sub-pos" if score >= 55 else "kpi-sub-neg"
         spark = _sparkline_svg(score, color)
-        cards.append(f"""
-            <div class="kpi-card">
-                <div class="kpi-head">
-                    <span class="kpi-label">{label}</span>
-                    <span class="kpi-dot" style="background: {color};"></span>
-                </div>
-                <div class="kpi-value" style="color: {color};">{score:.1f}</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-                    <span class="kpi-sub {sub_class}">▲ {delta_label}</span>
-                    {spark}
-                </div>
-            </div>
-        """)
+        # Single-line HTML — multi-line indented strings get parsed as code blocks
+        cards.append(
+            f'<div class="kpi-card">'
+            f'<div class="kpi-head">'
+            f'<span class="kpi-label">{label}</span>'
+            f'<span class="kpi-dot" style="background: {color};"></span>'
+            f'</div>'
+            f'<div class="kpi-value" style="color: {color};">{score:.1f}</div>'
+            f'<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">'
+            f'<span class="kpi-sub {sub_class}">▲ {delta_label}</span>'
+            f'{spark}'
+            f'</div>'
+            f'</div>'
+        )
     return f'<div class="kpi-grid">{"".join(cards)}</div>'
 
 
 def _sparkline_svg(score: float, color: str) -> str:
     """Generate a deterministic sparkline based on the score."""
     import math
-    # Build 8 points with the score as the endpoint and prior values trending toward it
     points = []
     base = score - 8
     for i in range(8):
-        # Smooth-ish curve trending up to score
         t = i / 7
         v = base + (score - base) * t + math.sin(i * 1.7) * 4
         v = max(0, min(100, v))
         points.append(v)
-    # Map to SVG coordinates
     w, h = 60, 22
     coords = []
     for i, v in enumerate(points):
@@ -1341,13 +1318,14 @@ def _sparkline_svg(score: float, color: str) -> str:
         y = h - (v / 100) * h
         coords.append(f"{x:.1f},{y:.1f}")
     path = "M " + " L ".join(coords)
-    return f"""
-    <svg width="{w}" height="{h}" viewBox="0 0 {w} {h}">
-        <path d="{path}" fill="none" stroke="{color}" stroke-width="1.2" opacity="0.85"/>
-        <circle cx="{coords[-1].split(',')[0]}" cy="{coords[-1].split(',')[1]}"
-                r="1.6" fill="{color}"/>
-    </svg>
-    """
+    last_x, last_y = coords[-1].split(",")
+    # Single-line SVG so Streamlit doesn't treat it as a code block
+    return (
+        f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" style="display:inline-block;vertical-align:middle;">'
+        f'<path d="{path}" fill="none" stroke="{color}" stroke-width="1.2" opacity="0.85"/>'
+        f'<circle cx="{last_x}" cy="{last_y}" r="1.6" fill="{color}"/>'
+        f'</svg>'
+    )
 
 
 def _render_limit_bars(layer_scores: dict, weakest: str) -> str:
@@ -1360,33 +1338,33 @@ def _render_limit_bars(layer_scores: dict, weakest: str) -> str:
         bar_color = TERM_RED_HARD if breached else (TERM_AMBER if warning else TERM_GREEN)
         breach_class = " breach" if breached else ""
         breach_tag = '<span class="breach-tag">◆ BOTTLENECK</span>' if layer_name == weakest else ""
-        rows.append(f"""
-            <div class="limit-row{breach_class}">
-                <div class="limit-head">
-                    <span class="limit-name">{layer_name}</span>
-                    <span class="limit-val">
-                        <span style="color: {bar_color};">{score}</span>
-                        <span class="limit-of"> / 5</span>
-                    </span>
-                </div>
-                <div class="limit-track">
-                    <div class="limit-fill" style="width: {pct*100}%; background: {bar_color};"></div>
-                </div>
-                <div class="limit-foot">
-                    <span>{int(pct*100)}% UTILIZATION</span>
-                    {breach_tag}
-                </div>
-            </div>
-        """)
-    return f"""
-        <div class="term-panel">
-            <div class="term-panel-header">
-                <div class="term-panel-title">Layer Utilization</div>
-                <div class="term-panel-meta">5 LAYERS · 1 WEAKEST</div>
-            </div>
-            {"".join(rows)}
-        </div>
-    """
+        rows.append(
+            f'<div class="limit-row{breach_class}">'
+            f'<div class="limit-head">'
+            f'<span class="limit-name">{layer_name}</span>'
+            f'<span class="limit-val">'
+            f'<span style="color:{bar_color};">{score}</span>'
+            f'<span class="limit-of"> / 5</span>'
+            f'</span>'
+            f'</div>'
+            f'<div class="limit-track">'
+            f'<div class="limit-fill" style="width:{pct*100}%;background:{bar_color};"></div>'
+            f'</div>'
+            f'<div class="limit-foot">'
+            f'<span>{int(pct*100)}% UTILIZATION</span>'
+            f'{breach_tag}'
+            f'</div>'
+            f'</div>'
+        )
+    return (
+        f'<div class="term-panel">'
+        f'<div class="term-panel-header">'
+        f'<div class="term-panel-title">Layer Utilization</div>'
+        f'<div class="term-panel-meta">5 LAYERS · 1 WEAKEST</div>'
+        f'</div>'
+        f'{"".join(rows)}'
+        f'</div>'
+    )
 
 
 def _render_value_pools(pools: list) -> str:
@@ -1396,43 +1374,41 @@ def _render_value_pools(pools: list) -> str:
     for i, p in enumerate(pools, 1):
         label = label_map.get(p["score"], "—")
         color = color_map.get(p["score"], TERM_DIM)
-        rows.append(f"""
-            <div class="limit-row">
-                <div class="limit-head">
-                    <span class="limit-name">
-                        <span style="color: {TERM_DIM}; font-family: 'JetBrains Mono', monospace; margin-right: 8px;">
-                            {i:02d}
-                        </span>
-                        {p['label']}
-                    </span>
-                    <span class="limit-val" style="color: {color};">{label}</span>
-                </div>
-            </div>
-        """)
-    return f"""
-        <div class="term-panel">
-            <div class="term-panel-header">
-                <div class="term-panel-title">Value Pools at Stake</div>
-                <div class="term-panel-meta">RANKED · TOP 5</div>
-            </div>
-            {"".join(rows)}
-        </div>
-    """
+        rows.append(
+            f'<div class="limit-row">'
+            f'<div class="limit-head">'
+            f'<span class="limit-name">'
+            f'<span style="color:{TERM_DIM};font-family:\'JetBrains Mono\',monospace;margin-right:8px;">{i:02d}</span>'
+            f'{p["label"]}'
+            f'</span>'
+            f'<span class="limit-val" style="color:{color};">{label}</span>'
+            f'</div>'
+            f'</div>'
+        )
+    return (
+        f'<div class="term-panel">'
+        f'<div class="term-panel-header">'
+        f'<div class="term-panel-title">Value Pools at Stake</div>'
+        f'<div class="term-panel-meta">RANKED · TOP 5</div>'
+        f'</div>'
+        f'{"".join(rows)}'
+        f'</div>'
+    )
 
 
 def _render_use_cases(use_cases: list) -> str:
     rows = []
     for i, uc in enumerate(use_cases, 1):
-        rows.append(f"""
-            <div class="uc-row">
-                <div class="uc-rank">0{i}</div>
-                <div class="uc-text">
-                    <div class="uc-name">{uc['label']}</div>
-                    <div class="uc-meta">STRATEGIC FIT · {uc['score']}/5</div>
-                </div>
-                <div class="uc-fit">{uc['score']}.0</div>
-            </div>
-        """)
+        rows.append(
+            f'<div class="uc-row">'
+            f'<div class="uc-rank">0{i}</div>'
+            f'<div class="uc-text">'
+            f'<div class="uc-name">{uc["label"]}</div>'
+            f'<div class="uc-meta">STRATEGIC FIT · {uc["score"]}/5</div>'
+            f'</div>'
+            f'<div class="uc-fit">{uc["score"]}.0</div>'
+            f'</div>'
+        )
     return "".join(rows)
 
 
@@ -1446,46 +1422,42 @@ def _render_roi_grid(roi: dict) -> str:
          "pos" if roi["roi_multiple"] >= 1 else "neg"),
     ]
     cells = "".join(
-        f"""
-        <div class="roi-cell">
-            <div class="roi-label">{label}</div>
-            <div class="roi-val {cls}">{val}</div>
-        </div>
-        """
+        f'<div class="roi-cell">'
+        f'<div class="roi-label">{label}</div>'
+        f'<div class="roi-val {cls}">{val}</div>'
+        f'</div>'
         for label, val, cls in metrics
     )
-    return f"""
-        <div class="term-panel">
-            <div class="term-panel-header">
-                <div class="term-panel-title">ROI Outlook · 18-Month Horizon</div>
-                <div class="term-panel-meta">INDICATIVE · ARCHETYPE-BENCHMARKED</div>
-            </div>
-            <div class="term-panel-body">
-                <div class="roi-grid">{cells}</div>
-            </div>
-        </div>
-    """
+    return (
+        f'<div class="term-panel">'
+        f'<div class="term-panel-header">'
+        f'<div class="term-panel-title">ROI Outlook · 18-Month Horizon</div>'
+        f'<div class="term-panel-meta">INDICATIVE · ARCHETYPE-BENCHMARKED</div>'
+        f'</div>'
+        f'<div class="term-panel-body">'
+        f'<div class="roi-grid">{cells}</div>'
+        f'</div>'
+        f'</div>'
+    )
 
 
 def _render_next_steps(steps: list) -> str:
     rows = "".join(
-        f"""
-        <div class="step-row">
-            <div class="step-num">{i:02d}</div>
-            <div class="step-text">{step}</div>
-        </div>
-        """
+        f'<div class="step-row">'
+        f'<div class="step-num">{i:02d}</div>'
+        f'<div class="step-text">{step}</div>'
+        f'</div>'
         for i, step in enumerate(steps, 1)
     )
-    return f"""
-        <div class="term-panel">
-            <div class="term-panel-header">
-                <div class="term-panel-title">Recommended Next Steps</div>
-                <div class="term-panel-meta">SEQUENCED · BY PRIORITY</div>
-            </div>
-            <div class="term-panel-body">{rows}</div>
-        </div>
-    """
+    return (
+        f'<div class="term-panel">'
+        f'<div class="term-panel-header">'
+        f'<div class="term-panel-title">Recommended Next Steps</div>'
+        f'<div class="term-panel-meta">SEQUENCED · BY PRIORITY</div>'
+        f'</div>'
+        f'<div class="term-panel-body">{rows}</div>'
+        f'</div>'
+    )
 
 
 # =============================================================================
