@@ -1,4 +1,8 @@
 [theme]
+# Force light base so Streamlit ignores the user's OS / browser dark-mode setting.
+# Our results page applies its own dark terminal styling via in-page CSS;
+# the intake flow stays light at the platform level so labels are always readable.
+base = "light"
 primaryColor = "#1B365D"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F5F5F0"
@@ -7,6 +11,7 @@ font = "sans serif"
 
 [server]
 headless = true
+runOnSave = false
 
 [browser]
 gatherUsageStats = false
