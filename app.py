@@ -128,14 +128,71 @@ LIGHT_CSS = f"""
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+/* === FORCE LIGHT THEME === */
+/* Override any dark-mode inheritance from user's Streamlit settings or OS preference. */
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"],
+[data-testid="stMain"], [data-testid="stSidebar"], section.main {{
+    background-color: #FFFFFF !important;
+    color: {CHARCOAL} !important;
+}}
+.stApp > header {{ background-color: #FFFFFF !important; }}
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] span,
+[data-testid="stMarkdownContainer"] strong,
+[data-testid="stMarkdownContainer"] em,
+.stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown span,
+label, .stRadio label, .stCheckbox label, .stSelectbox label {{
+    color: {CHARCOAL} !important;
+}}
+
+/* Form widget labels and helper text */
+[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
+.stTextInput label, .stTextArea label, .stSelectbox label,
+.stMultiSelect label, .stSlider label, .stRadio label,
+.stCheckbox label, .stDateInput label {{
+    color: {CHARCOAL} !important;
+}}
+
+/* Text inputs / selects — light backgrounds with dark text */
+[data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea,
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-baseweb="input"] input,
+.stSelectbox div[role="combobox"],
+.stSelectbox div[data-baseweb="select"] {{
+    background-color: #FFFFFF !important;
+    color: {CHARCOAL} !important;
+    border: 1px solid {LIGHT_GREY} !important;
+}}
+
+/* Radio + checkbox text */
+.stRadio div[role="radiogroup"] label,
+.stRadio div[role="radiogroup"] label p,
+.stRadio label > div,
+.stCheckbox label p,
+.stCheckbox label > div {{
+    color: {CHARCOAL} !important;
+}}
+
+/* Selectbox dropdown menu (popover) */
+[data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+    background-color: #FFFFFF !important;
+}}
+[role="option"], [role="option"] * {{
+    color: {CHARCOAL} !important;
+}}
+
 html, body, [class*="css"] {{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #FFFFFF !important;
 }}
 
 .block-container {{
     padding-top: 2rem;
     padding-bottom: 4rem;
     max-width: 820px;
+    background-color: #FFFFFF !important;
 }}
 
 .brand-mark {{
@@ -148,7 +205,7 @@ html, body, [class*="css"] {{
     margin: 0.5rem 0 1.5rem 0;
 }}
 
-h1, h2, h3 {{
+h1, h2, h3, h4, h5, h6 {{
     color: {NAVY} !important; font-weight: 700 !important;
     letter-spacing: -0.01em !important;
 }}
@@ -163,13 +220,13 @@ h3 {{ font-size: 1.1rem !important; }}
 }}
 .stage-banner .stage-label {{
     font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em;
-    color: {GOLD}; text-transform: uppercase;
+    color: {GOLD} !important; text-transform: uppercase;
 }}
 .stage-banner .stage-title {{
-    font-size: 1.05rem; font-weight: 700; color: {NAVY}; margin-top: 2px;
+    font-size: 1.05rem; font-weight: 700; color: {NAVY} !important; margin-top: 2px;
 }}
 .stage-banner .stage-help {{
-    font-size: 0.9rem; color: {GREY}; margin-top: 4px;
+    font-size: 0.9rem; color: {GREY} !important; margin-top: 4px;
 }}
 
 .q-card {{
@@ -799,30 +856,29 @@ def step_stage2():
     )
     answers = st.session_state.stage2.copy()
     levels = list(VALUE_LEVELS.keys())
-    for p in VALUE_POOLS:
-        cols = st.columns([2, 3])
-        with cols[0]:
-            st.markdown(
-                f"<div style='padding-top: 6px; font-weight: 600; color: {CHARCOAL};'>"
-                f"{p['label']}</div>",
-                unsafe_allow_html=True,
-            )
-        with cols[1]:
-            current_score = answers.get(p["key"], 0)
-            current_label = next(
-                (l for l, v in VALUE_LEVELS.items() if v == current_score),
-                "Not relevant",
-            )
-            choice = st.radio(
-                p["label"], levels,
-                index=levels.index(current_label), horizontal=True,
-                label_visibility="collapsed", key=f"s2_{p['key']}",
-            )
-            answers[p["key"]] = VALUE_LEVELS[choice]
+    for i, p in enumerate(VALUE_POOLS):
+        # Each pool gets its own card with the label on top and radios below
         st.markdown(
-            "<hr style='border: none; border-top: 1px solid #E8E8E5; margin: 0.6rem 0;'/>",
+            f"""
+            <div class="q-card" style="margin-bottom: 0.4rem;">
+                <div class="q-label">Value Pool {i+1:02d}</div>
+                <div class="q-statement">{p['label']}</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
+        current_score = answers.get(p["key"], 0)
+        current_label = next(
+            (l for l, v in VALUE_LEVELS.items() if v == current_score),
+            "Not relevant",
+        )
+        choice = st.radio(
+            p["label"], levels,
+            index=levels.index(current_label), horizontal=True,
+            label_visibility="collapsed", key=f"s2_{p['key']}",
+        )
+        answers[p["key"]] = VALUE_LEVELS[choice]
+        st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
     st.session_state.stage2 = answers
     nav_buttons("stage1", "stage3")
 
