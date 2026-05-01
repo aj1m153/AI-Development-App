@@ -590,6 +590,26 @@ p, span, div, li {{ color: {TERM_TEXT}; }}
     background: #DBBE7A; transform: translateY(-1px);
 }}
 
+/* Email Directly link — styled to match the download button */
+.term-mail-link {{
+    display: block;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    background: {TERM_PANEL};
+    color: {TERM_TEXT} !important;
+    border: 1px solid {TERM_BORDER};
+    border-radius: 2px;
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    transition: all 0.15s ease;
+}}
+.term-mail-link:hover {{
+    border-color: {GOLD};
+    color: {GOLD} !important;
+}}
+
 /* Status footer */
 .term-footer {{
     border-top: 1px solid {TERM_BORDER};
@@ -1183,19 +1203,10 @@ def step_results():
             f"Thanks,\n{assessment['lead'].get('name', '')}"
         )
         mailto = f"mailto:{CONTACT_EMAIL}?subject={subject}&body={body}"
-        _md(f"""
-            <a href="{mailto}" style="
-                display: block; text-align: center; padding: 0.6rem 1rem;
-                background: {TERM_PANEL}; color: {TERM_TEXT};
-                border: 1px solid {TERM_BORDER}; border-radius: 2px;
-                text-decoration: none; font-family: 'JetBrains Mono', monospace;
-                font-size: 0.8rem; letter-spacing: 0.06em;
-                transition: all 0.15s ease;
-            " onmouseover="this.style.borderColor='{GOLD}';this.style.color='{GOLD}';"
-              onmouseout="this.style.borderColor='{TERM_BORDER}';this.style.color='{TERM_TEXT}';">
-                ✉ EMAIL DIRECTLY
-            </a>
-            """)
+        # No inline onmouseover/onmouseout — Streamlit's HTML sanitizer strips
+        # event handlers and ends up dropping the whole <a> tag. Hover styling
+        # is handled by the .term-mail-link CSS class injected with TERMINAL_CSS.
+        _md(f'<a href="{mailto}" class="term-mail-link">✉ EMAIL DIRECTLY</a>')
 
     # ---- CTA ----
     _md(f"""
